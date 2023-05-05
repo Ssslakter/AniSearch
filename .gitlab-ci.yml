@@ -1,0 +1,26 @@
+stages:
+  - build
+
+.python-tests-template:
+  before_script:
+    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+
+check_dependencies:
+  stage: build
+  script:
+    - poetry install
+    - poetry show --outdated
+    - poetry run safety check
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: always
+
+lint-job:
+  stage: build
+  image: python:3.10-alpine
+  script:
+    - pip install pylint
+    - pylint src
+  rules:
+  - if: '$CI_MERGE_REQUEST_ID'
+    when: always
