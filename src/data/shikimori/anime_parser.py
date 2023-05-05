@@ -1,8 +1,9 @@
 import time
+from venv import logger
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from selenium.webdriver.remote.webdriver import WebDriver
-from data_writers import DataWriterBase
+from ..data_writers import DataWriterBase
 
 
 class ShikimoriAnimeParser:
@@ -46,13 +47,13 @@ class ShikimoriAnimeParser:
             anime_id (str): id of the anime on the shikimori to join its page
 
         Returns:
-            tuple[str | None, list[str]]: dictionary of properties extracted from page
+            dict[str, object]: dictionary of properties extracted from page
         """
         uri = f"{self.url}/animes/z{anime_id}"
         self.webdriver.get(uri)
         soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
 
-        return {"id": anime_id}.update(self._parse_page(soup))
+        return {"id": anime_id} | self._parse_page(soup)
 
     def _parse_page(self, page: BeautifulSoup) -> dict[str, object]:
 
@@ -85,19 +86,27 @@ class ShikimoriAnimeParser:
             "age": age_value
         }
 
-    def parse(self) -> None:
+    def parse(self) -> list[int]:
         """Function that starts parcing the website
+
+        Returns:
+            list[int]: list of ids failed to parse
         """
+        failed = []
         self.data_writer.prepare()
         for i in range(1, self.max_pages+1):
 
-            print(f"Parsing {i} page")
+            logger.info(f"Parsing {i} page")
             page_ids = self.get_ids(i)
 
             for anime_id in tqdm(page_ids):
-                anime_data = self.get_anime_data(anime_id)
-                self.data_writer.write(anime_data)
-                # sleep to not get captcha
-                time.sleep(2.5)
-
+                try:
+                    anime_data = self.get_anime_data(anime_id)
+                    self.data_writer.write(anime_data)
+                    # sleep to not get captcha
+                    time.sleep(2.5)
+                except Exception as e:
+                    logger.error(f"Failed to parse page with id {anime_id}")
+                    failed.append(anime_id)
         self.data_writer.finalize()
+        return failed

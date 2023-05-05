@@ -7,6 +7,9 @@ from selenium.webdriver.edge.service import Service as EdgeService
 
 
 class WebDriverBuilder:
+    """Class to simplify creation of Selenium webdrivers
+    """
+
     def __init__(self, browser_name: Literal["chrome", "edge"] = "chrome", open_window: bool = True) -> None:
         match browser_name:
             case "chrome":

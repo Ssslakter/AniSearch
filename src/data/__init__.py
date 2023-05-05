@@ -1,1 +1,1 @@
-from data_writers import JsonWriter
+from .data_writers import JsonWriter, DataWriterBase
