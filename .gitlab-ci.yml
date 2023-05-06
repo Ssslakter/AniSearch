@@ -40,4 +40,4 @@ test-job:
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
       when: on_success
-    when: manual
+    - when: manual
