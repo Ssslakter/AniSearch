@@ -2,7 +2,7 @@ import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
-from utils import AnimeRating, WebParserParams
+from src.data.utils import AnimeRating
 
 
 class ShikimoriUserDataParser:

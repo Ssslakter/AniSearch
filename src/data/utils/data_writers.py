@@ -1,18 +1,23 @@
+from abc import ABC, abstractmethod
 import json
 import os
 from pathlib import Path
 
 
-class DataWriterBase:
+class DataWriterBase(ABC):
+    @abstractmethod
     def __init__(self) -> None:
         pass
 
+    @abstractmethod
     def prepare(self) -> None:
         pass
 
+    @abstractmethod
     def write(self, object) -> None:
         pass
 
+    @abstractmethod
     def finalize(self) -> None:
         pass
 

@@ -3,7 +3,7 @@ from venv import logger
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 from selenium.webdriver.remote.webdriver import WebDriver
-from ..data_writers import DataWriterBase
+from src.data.utils import DataWriterBase
 
 
 class ShikimoriAnimeParser:
