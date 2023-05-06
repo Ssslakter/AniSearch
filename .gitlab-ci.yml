@@ -1,3 +1,5 @@
+image: python:3.10
+
 stages:
   - build
   - test
@@ -16,7 +18,6 @@ check_dependencies:
 
 lint-job:
   stage: build
-  image: python:3.10-alpine
   script:
     - pip install pylint
     - pylint src
@@ -24,9 +25,8 @@ lint-job:
   - if: '$CI_MERGE_REQUEST_ID'
     when: always
 
-test:
+test-job:
   stage: test
-  image: python:3.10-alpine
   allow_failure: true
   before_script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
