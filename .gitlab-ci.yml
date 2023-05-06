@@ -1,6 +1,7 @@
 image: python:3.10
 
 stages:
+  - check-deps
   - build
   - test
 workflow:
@@ -13,19 +14,21 @@ cache:
     key: poetry-cache
     paths:
       - $HOME/.cache/pypoetry
+      - /root/.local/bin
     policy: pull
 
 install-dependencies:
   script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
     - export PATH="/root/.local/bin:$PATH"
-  stage: build
+  stage: check-deps
   when: manual
   allow_failure: true
   cache:
     key: poetry-cache
     paths:
       - $HOME/.cache/pypoetry
+      - /root/.local/bin
     policy: push
 
 
