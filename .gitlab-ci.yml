@@ -1,11 +1,10 @@
 stages:
   - build
-
-.python-tests-template:
-  before_script:
-    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+  - test
 
 check_dependencies:
+  before_script:
+    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
   stage: build
   script:
     - poetry install
@@ -24,3 +23,14 @@ lint-job:
   rules:
   - if: '$CI_MERGE_REQUEST_ID'
     when: always
+
+test:
+  stage: test
+  image: python:3.10-alpine
+  allow_failure: true
+  before_script:
+    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+   script:
+    - poetry install
+    - poetry build
+    - pytest src
