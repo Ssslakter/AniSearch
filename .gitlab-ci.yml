@@ -4,17 +4,22 @@ stages:
   - build
   - test
 
-check_dependencies:
+check-dependencies:
   before_script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+    - export PATH="/root/.local/bin:$PATH"
   stage: build
   script:
     - poetry install
     - poetry show --outdated
     - poetry run safety check
+    - ls -la
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
       when: always
+  artifacts:
+    paths:
+      - $HOME/.cache/pypoetry/virtualenvs
 
 lint-job:
   stage: build
@@ -27,10 +32,9 @@ lint-job:
 
 test-job:
   stage: test
+  needs:
+    - build
   allow_failure: true
-  before_script:
-    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
-    - export PATH="/root/.local/bin:$PATH
   script:
     - poetry install
     - poetry build
