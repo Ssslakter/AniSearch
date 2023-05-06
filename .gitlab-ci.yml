@@ -8,23 +8,39 @@ workflow:
   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     when: always
 
-check-dependencies:
-  before_script:
+
+cache:
+    key: poetry-cache
+    paths:
+      - $HOME/.cache/pypoetry
+    policy: pull
+
+install-dependencies:
+  script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
     - export PATH="/root/.local/bin:$PATH"
+  stage: build
+  when: manual
+  allow_failure: true
+  cache:
+    key: poetry-cache
+    paths:
+      - $HOME/.cache/pypoetry
+    policy: push
+
+
+build-job:
   stage: build
   script:
     - poetry install
     - poetry show --outdated
     - poetry build
     - ls -la
-  artifacts:
-    paths:
-      - $HOME/.cache/pypoetry/virtualenvs
-
 
 lint-job:
   stage: build
+  needs: 
+    - build-job
   script:
     - pip install pylint
     - pylint src
@@ -32,7 +48,7 @@ lint-job:
 test-job:
   stage: test
   needs:
-    - check-dependencies
+    - lint-job
   script:
     - poetry install
     - poetry build
