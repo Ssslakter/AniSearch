@@ -96,7 +96,7 @@ class ShikimoriAnimeParser:
         self.data_writer.prepare()
         for i in range(1, self.max_pages+1):
 
-            logger.info(f"Parsing {i} page")
+            logger.info("Parsing %s page", i)
             page_ids = self.get_ids(i)
 
             for anime_id in tqdm(page_ids):
@@ -105,8 +105,8 @@ class ShikimoriAnimeParser:
                     self.data_writer.write(anime_data)
                     # sleep to not get captcha
                     time.sleep(2.5)
-                except Exception as e:
-                    logger.error(f"Failed to parse page with id {anime_id}")
+                except AttributeError:
+                    logger.error("Failed to parse page with id %s", anime_id)
                     failed.append(anime_id)
         self.data_writer.finalize()
         return failed

@@ -1,88 +1,104 @@
 import time
+import uuid
+from venv import logger
 from bs4 import BeautifulSoup
-from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
+from tqdm import tqdm
 
-from src.data.utils import AnimeRating
+from src.data.utils import DataWriterBase
 
 
 class ShikimoriUserDataParser:
-    def __init__(self, params: WebParserParams) -> None:
-        self.browser = webdriver.Chrome(
-            service=params.service, options=params.options)
+    """Parses user ratings data from shikimori
+    """
 
-    def get_users(self, anime_url: str) -> list[str]:
-        url = f"{anime_url}/favoured"
-        self.browser.get(url)
-        soup = BeautifulSoup(self.browser.page_source, 'html.parser')
+    def __init__(self, webdriver: WebDriver, url: str, max_pages: int, data_writer: DataWriterBase) -> None:
+        self.webdriver = webdriver
+        self.url = url
+        self.max_pages = max_pages
+        self.data_writer = data_writer
+
+    def get_users(self, page_number: int) -> list[str]:
+        """Get userpage urls from a page
+
+        Args:
+            page_number (int): number of the page to parse
+
+        Returns:
+            list[str]: list of userpage urls
+        """
+        self.webdriver.get(f"{self.url}/users/page/{page_number}")
+        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
 
         user_links = []
-        users_el = soup.find_all("a", {"class": "avatar"})
+        user_divs = soup.find_all("div", {"class": "b-user"})
 
-        for user in users_el:
-            user_links.append(user["href"])
+        user_links = list(map(lambda x: x.find(
+            'a', class_="name")["href"], user_divs))
 
         return user_links
 
-    def get_user_anime_list(self, user_url: str) -> tuple[list[AnimeRating], list[str]]:
+    def get_user_anime_list(self, user_url: str) -> list[tuple[str, int | None]]:
+        """Gets anime list of a user
+
+        Args:
+            user_url (str): url of the page user
+
+        Returns:
+            tuple[list[AnimeRating], list[str]]: tuple of anime list
+        """
         url = f"{user_url}/list/anime"
-        self.browser.get(url)
-        soup = BeautifulSoup(self.browser.page_source, 'html.parser')
+        self.webdriver.get(url)
+        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
+        watched = soup.find("div", text='Просмотрено')
+        if watched is None:
+            return []
+        watched_table = watched.parent.find_next_sibling('table')
 
-        anime_list_el = soup.find_all("tr", {"class": "user_rate"})
+        user_rates = watched_table.find_all("tr", {"class": "user_rate"})
+        rates_data = list(map(self._parse_row, user_rates))
+        return rates_data
 
-        rates, anime = [], []
+    def _parse_row(self, row: BeautifulSoup) -> tuple[str, int | None]:
+        """Parses a row of the table
 
-        for el in anime_list_el:
-            rating = el.find_next("span", {"class": "current-value"}).text
-            rating = int(rating) if rating != "–" else None
+        Args:
+            row (BeautifulSoup): row to parse
 
-            anime_id = f"z{el['data-target_id']}"
+        Returns:
+            dict[str, object]: parsed data
+        """
+        rating = row.find_next("span", {"class": "current-value"}).text
+        rating = int(rating) if rating != "–" else None
 
-            rates.append(AnimeRating(anime_id, user_url, rating))
-            anime.append(anime_id)
+        anime_id = f"{row['data-target_id']}"
 
-        return rates, anime
+        return (anime_id, rating)
 
-    def wait_for_login(self) -> None:
-        self.browser.get("https://shikimori.one")
-        time.sleep(20)
+    def parse(self) -> list[str]:
+        """Start parsing user data
 
+        Returns:
+            list[int]: list of failed urls
+        """
+        failed = []
+        self.data_writer.prepare()
+        for i in range(1, self.max_pages+1):
 
-# def update_anime_collection(anime_list: list[str]) -> None:
-#     global anime
+            logger.info("Parsing %s page", i)
+            user_urls = self.get_users(i)
 
-#     for an in anime_list:
-#         if an in anime:
-#             continue
-
-#         anime.append(an)
-
-
-# ratings = []
-# anime = []
-# tags = ['Психологическое', 'Этти', 'Романтика', 'Повседневность', 'Сверхъестественное', 'Пародия', 'Школа',
-#         'Демоны', 'Спорт', 'Игры', 'Меха', 'Исторический', 'Супер сила', 'Сэйнэн', 'Безумие', 'Самураи',
-#         'Сёнен', 'Дзёсей', 'Боевые искусства', 'Приключения', 'Вампиры', 'Сёдзё', 'Ужасы', 'Музыка',
-#         'Гурман', 'Драма', 'Фантастика', 'Триллер', 'Фэнтези', 'Военное', 'Детектив', 'Полиция',
-#         'Экшен', 'Работа', 'Комедия', 'Космос', 'Сёдзё-ай', 'Гарем'
-#         ]
-
-
-# def complex_parse() -> None:
-#     global ratings, anime, tags
-
-#     wait_for_login()
-#     users = get_users("https://shikimori.one/animes/2559-romeo-no-aoi-sora")
-
-#     for user in users:
-#         time.sleep(2)
-
-#         r, a = get_user_anime_list(user)
-#         ratings += r
-#         update_anime_collection(a)
-
-#     init_anime_csv()
-#     save_anime()
-
-
-# ANIME_PAGE = 1
+            for url in tqdm(user_urls):
+                try:
+                    user_data = {
+                        "user_id": str(uuid.uuid4()),
+                        "ratings": self.get_user_anime_list(url)
+                    }
+                    self.data_writer.write(user_data)
+                    # sleep to not get captcha
+                    time.sleep(2.5)
+                except AttributeError:
+                    logger.error("Failed to parse page with url %s", url)
+                    failed.append(url)
+        self.data_writer.finalize()
+        return failed
