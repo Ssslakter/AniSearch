@@ -30,6 +30,7 @@ test-job:
   allow_failure: true
   before_script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+    - export PATH="/root/.local/bin:$PATH
   script:
     - poetry install
     - poetry build
