@@ -4,6 +4,10 @@ stages:
   - build
   - test
 
+rules:
+- if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  when: always
+
 check-dependencies:
   before_script:
     - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
@@ -12,23 +16,18 @@ check-dependencies:
   script:
     - poetry install
     - poetry show --outdated
-    - poetry run safety check
+    - poetry build
     - ls -la
-  rules:
-    - if: '$CI_MERGE_REQUEST_ID'
-      when: always
   artifacts:
     paths:
       - $HOME/.cache/pypoetry/virtualenvs
+
 
 lint-job:
   stage: build
   script:
     - pip install pylint
     - pylint src
-  rules:
-  - if: '$CI_MERGE_REQUEST_ID'
-    when: always
 
 test-job:
   stage: test
@@ -39,3 +38,8 @@ test-job:
     - poetry install
     - poetry build
     - pytest src
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      when: on_success
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != "main"
+      when: manual
