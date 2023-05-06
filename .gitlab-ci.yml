@@ -33,7 +33,7 @@ lint-job:
 test-job:
   stage: test
   needs:
-    - build
+    - build-job
   allow_failure: true
   script:
     - poetry install
