@@ -26,6 +26,8 @@ install:
     - pwd
     - echo "Restoring Poetry..."
     - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
+    - echo $PATH
+    - export PATH="/root/.local/bin:$PATH"
     - poetry --version
     - poetry install
     - poetry show --outdated
