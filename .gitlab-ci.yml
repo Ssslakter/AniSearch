@@ -1,7 +1,10 @@
 image: python:3.10
 
+variables:
+  PATH: "/root/.local/bin:$PATH"
+
 stages:
-  - check-deps
+  - install-deps
   - build
   - test
 workflow:
@@ -13,48 +16,42 @@ workflow:
 cache:
     key: poetry-cache
     paths:
-      - $HOME/.cache/pypoetry
-      - /root/.local/bin
-    policy: pull
+      - /root/.local/share/pypoetry
+      - /root/.venv
 
-install-dependencies:
+install:
+  stage: install-deps
   script:
-    - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
-    - export PATH="/root/.local/bin:$PATH"
-  stage: check-deps
-  when: manual
-  allow_failure: true
-  cache:
-    key: poetry-cache
-    paths:
-      - $HOME/.cache/pypoetry
-      - /root/.local/bin
-    policy: push
-
-
-build-job:
-  stage: build
-  script:
+    - pwd
+    - echo "Restoring Poetry..."
+    - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
+    - poetry --version
     - poetry install
     - poetry show --outdated
-    - poetry build
-    - ls -la
 
-lint-job:
+
+build:
   stage: build
-  needs: 
-    - build-job
   script:
-    - pip install pylint
-    - pylint src
-
-test-job:
-  stage: test
-  needs:
-    - lint-job
-  script:
+    - poetry --version
+    - echo "Saving Poetry cache..."
     - poetry install
     - poetry build
+
+lint:
+  stage: build
+  needs: 
+    - build
+  script:
+    - poetry shell
+    - pylint src
+
+test:
+  stage: test
+  needs:
+    - lint
+  script:
+    - poetry shell
     - pytest src
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
