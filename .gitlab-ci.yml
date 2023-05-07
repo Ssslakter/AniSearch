@@ -24,10 +24,9 @@ install:
   stage: install-deps
   script:
     - pwd
-    - echo "Restoring Poetry..."
-    - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
-    - echo $PATH
+    - ls -la
     - export PATH="/root/.local/bin:$PATH"
+    - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
     - poetry --version
     - poetry install
     - poetry show --outdated
@@ -36,6 +35,7 @@ install:
 build:
   stage: build
   script:
+    - export PATH="/root/.local/bin:$PATH"
     - poetry --version
     - echo "Saving Poetry cache..."
     - poetry install
@@ -46,6 +46,7 @@ lint:
   needs: 
     - build
   script:
+    - export PATH="/root/.local/bin:$PATH"
     - poetry shell
     - pylint src
 
@@ -54,6 +55,7 @@ test:
   needs:
     - lint
   script:
+    - export PATH="/root/.local/bin:$PATH"
     - poetry shell
     - pytest src
   rules:
