@@ -1,7 +1,8 @@
 image: python:3.10
 
-variables:
-  PATH: "/root/.local/bin:$PATH"
+before-script:
+  script:
+    - export PATH="/root/.local/bin:$PATH"
 
 stages:
   - install-deps
