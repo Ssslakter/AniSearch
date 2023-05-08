@@ -34,11 +34,17 @@ install:
     - poetry --version
     - poetry install
     - poetry show --outdated
+    - ls /root/.local/bin
+    - ls /root/.local/share/pypoetry
+    - ls /root/.venv
 
 
 build:
   stage: build
   script:
+    - ls /root/.local/bin
+    - ls /root/.local/share/pypoetry
+    - ls /root/.venv
     - export PATH="/root/.local/bin:$PATH"
     - poetry --version
     - echo "Saving Poetry cache..."
