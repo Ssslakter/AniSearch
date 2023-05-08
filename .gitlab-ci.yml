@@ -24,6 +24,9 @@ cache:
 install:
   stage: install-deps
   script:
+    - ls /root/.local/bin
+    - ls /root/.local/share/pypoetry
+    - ls /root/.venv
     - pwd
     - ls -la
     - export PATH="/root/.local/bin:$PATH"
