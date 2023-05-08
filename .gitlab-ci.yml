@@ -19,7 +19,7 @@ cache:
     paths:
       - /root/.local/bin
       - /root/.local/share/pypoetry
-      - .venv
+      - /root/.cache/
 
 install:
   stage: install-deps
@@ -33,13 +33,13 @@ install:
     - poetry show --outdated
     - ls /root/.local/bin
     - ls /root/.local/share/pypoetry
-    - ls .venv
+    - ls /root/.cache/
   cache:
     key: poetry-cache
     paths:
       - /root/.local/bin
       - /root/.local/share/pypoetry
-      - .venv
+      - /root/.cache/
     policy: push
 
 
@@ -48,7 +48,7 @@ build:
   script:
     - ls /root/.local/bin
     - ls /root/.local/share/pypoetry
-    - ls .venv
+    - ls /root/.cache/
     - export PATH="/root/.local/bin:$PATH"
     - poetry --version
     - echo "Saving Poetry cache..."
