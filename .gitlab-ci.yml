@@ -17,6 +17,7 @@ workflow:
 cache:
     key: poetry-cache
     paths:
+      - /root/.local/bin
       - /root/.local/share/pypoetry
       - /root/.venv
 
