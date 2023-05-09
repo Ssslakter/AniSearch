@@ -2,7 +2,6 @@ image: python:3.10
 
 variables:
   CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  PIP_CACHE_DIR: "$CACHE_DIR/pip"
   POETRY_HOME: "$CACHE_DIR/poetry"
 
 before-script:
@@ -43,7 +42,7 @@ build:
     - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
     - echo "Saving Poetry cache..."
-    - poetry install
+    - poetry install --directory=$CI_PIPELINE_SOURCE
     - poetry build
 
 lint:
