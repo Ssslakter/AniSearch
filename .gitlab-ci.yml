@@ -51,7 +51,7 @@ lint:
     - build
   script:
     - echo $POETRY_HOME
-    - export POETRY_HOME = "$CACHE_DIR/poetry"
+    - export POETRY_HOME="$CACHE_DIR/poetry"
     - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry shell
     - pylint src
