@@ -22,6 +22,7 @@ cache:
     key: poetry-cache
     paths:
       - $CACHE_DIR
+      - $CI_PROJECT_DIR/.venv
 
 install:
   stage: install-deps
@@ -32,20 +33,18 @@ install:
     - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
     - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
+    - poetry virtualenvs.in-project = true
+    - poetry config cache-dir $CACHE_DIR
     - poetry config --list
-    - poetry config virtualenvs.path $CACHE_DIR/virtualenvs
-    - poetry env list --full-path
+    - poetry shell
     - poetry install
     - poetry show --outdated
-
 
 build:
   stage: build
   script:
     - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
-    - echo "Saving Poetry cache..."
-    - poetry install --directory=$CI_PIPELINE_SOURCE
     - poetry build
 
 lint:
@@ -54,7 +53,7 @@ lint:
     - build
   script:
     - export PATH="$POETRY_HOME/bin:$PATH"
-    - poetry shell $POETRY_HOME/pypoetry/virtualenvs
+    - poetry shell
     - pylint src
 
 test:
