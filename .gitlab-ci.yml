@@ -8,6 +8,7 @@ variables:
 before-script:
   script:
     - export PATH="$POETRY_HOME/bin/:$PATH"
+    - echo $PATH
 
 stages:
   - install-deps
@@ -26,6 +27,7 @@ cache:
 install:
   stage: install-deps
   script:
+    - echo $PATH
     - pwd
     - ls -la
     - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
@@ -38,6 +40,7 @@ install:
 build:
   stage: build
   script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
     - echo "Saving Poetry cache..."
     - poetry install
@@ -48,6 +51,7 @@ lint:
   needs: 
     - build
   script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry shell
     - pylint src
 
@@ -56,6 +60,7 @@ test:
   needs:
     - lint
   script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry shell
     - pytest src
   rules:
