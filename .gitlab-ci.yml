@@ -33,7 +33,7 @@ install:
     - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
     - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
-    - poetry virtualenvs.in-project = true
+    - poetry config virtualenvs.in-project = true
     - poetry config cache-dir $CACHE_DIR
     - poetry config --list
     - poetry shell
