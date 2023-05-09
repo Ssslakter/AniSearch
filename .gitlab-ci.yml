@@ -7,7 +7,7 @@ variables:
 
 before-script:
   script:
-    - export PATH="$POETRY_HOME/bin:$PATH"
+    - export PATH="$POETRY_HOME/bin/:$PATH"
 
 stages:
   - install-deps
@@ -29,6 +29,7 @@ install:
     - pwd
     - ls -la
     - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
+    - export PATH="$POETRY_HOME/bin:$PATH"
     - poetry --version
     - poetry install
     - poetry show --outdated
