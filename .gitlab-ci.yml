@@ -42,7 +42,7 @@ install:
     - poetry config cache-dir $CACHE_DIR
     - poetry config --list
     - poetry install
-    - poetry env use .venv/bin
+    - source $(poetry env info --path)/bin/activate
     - pip list
     - poetry show --outdated
 
