@@ -42,6 +42,7 @@ install:
     - poetry config cache-dir $CACHE_DIR
     - poetry config --list
     - poetry install
+    - poetry env use .venv/bin
     - pip list
     - poetry show --outdated
 
@@ -59,7 +60,7 @@ lint:
     - build
   script:
     - export PATH="$POETRY_HOME/bin:$PATH"
-    - poetry env use .venv/bin
+    - source $(poetry env info --path)/bin/activate
     - pylint src
 
 test:
@@ -68,7 +69,7 @@ test:
     - lint
   script:
     - export PATH="$POETRY_HOME/bin:$PATH"
-    - poetry env use .venv/bin
+    - source $(poetry env info --path)/bin/activate
     - pytest src
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
