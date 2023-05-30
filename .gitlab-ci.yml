@@ -19,15 +19,12 @@ workflow:
   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     when: always
 
-default:
-  artifacts:
-    paths:
-      - .venv
 
 cache:
     key: poetry-cache
     paths:
       - $CACHE_DIR
+      - .venv
 
 install:
   stage: install-deps

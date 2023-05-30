@@ -2,21 +2,22 @@ import time
 import uuid
 from venv import logger
 from bs4 import BeautifulSoup
-from selenium.webdriver.remote.webdriver import WebDriver
 from tqdm import tqdm
+import requests
 
-from src.data.utils import DataWriterBase
+
+MAX_PAGES = 100
 
 
 class ShikimoriUserDataParser:
     """Parses user ratings data from shikimori
     """
 
-    def __init__(self, webdriver: WebDriver, url: str, max_pages: int, data_writer: DataWriterBase) -> None:
-        self.webdriver = webdriver
+    def __init__(self, url: str, max_users: int) -> None:
+        self.headers = {'User-Agent': ''}
         self.url = url
-        self.max_pages = max_pages
-        self.data_writer = data_writer
+        self.max_users = max_users
+        self.max_pages = MAX_PAGES
 
     def get_users(self, page_number: int) -> list[str]:
         """Get userpage urls from a page
@@ -27,8 +28,12 @@ class ShikimoriUserDataParser:
         Returns:
             list[str]: list of userpage urls
         """
-        self.webdriver.get(f"{self.url}/users/page/{page_number}")
-        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
+        response = requests.get(
+            f"{self.url}/users/page/{page_number}",
+            headers=self.headers,
+            timeout=10
+        )
+        soup = BeautifulSoup(response.text, 'html.parser')
 
         user_links = []
         user_divs = soup.find_all("div", {"class": "b-user"})
@@ -45,12 +50,12 @@ class ShikimoriUserDataParser:
             user_url (str): url of the page user
 
         Returns:
-            tuple[list[AnimeRating], list[str]]: tuple of anime list
+            list[tuple[str, int | None]]: list of id, score pairs
         """
         url = f"{user_url}/list/anime"
-        self.webdriver.get(url)
-        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
-        watched = soup.find("div", text='Просмотрено')
+        response = requests.get(url, headers=self.headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        watched = soup.find("div", string='Просмотрено')
         if watched is None:
             return []
         watched_table = watched.parent.find_next_sibling('table')
@@ -60,7 +65,7 @@ class ShikimoriUserDataParser:
         return rates_data
 
     def _parse_row(self, row: BeautifulSoup) -> tuple[str, int | None]:
-        """Parses a row of the table
+        """Parses a row in the table of user watched list
 
         Args:
             row (BeautifulSoup): row to parse
@@ -75,30 +80,33 @@ class ShikimoriUserDataParser:
 
         return (anime_id, rating)
 
-    def parse(self) -> list[str]:
+    def parse(self) -> tuple[dict, list[int]]:
         """Start parsing user data
 
         Returns:
-            list[int]: list of failed urls
+            tuple[dict, list[int]]: dictionary of data and list of failed urls
         """
         failed = []
-        self.data_writer.prepare()
-        for i in range(1, self.max_pages+1):
-
-            logger.info("Parsing %s page", i)
+        data = {}
+        pbar = tqdm(total=self.max_users)
+        for i in range(MAX_PAGES):
             user_urls = self.get_users(i)
 
-            for url in tqdm(user_urls):
+            for url in user_urls:
                 try:
                     user_data = {
-                        "user_id": str(uuid.uuid4()),
                         "ratings": self.get_user_anime_list(url)
                     }
-                    self.data_writer.write(user_data)
+                    if user_data["ratings"]:
+                        data[str(uuid.uuid4())] = user_data
+                        pbar.update(1)
+                    if len(data) == self.max_users:
+                        pbar.close()
+                        return data, failed
                     # sleep to not get captcha
                     time.sleep(2.5)
                 except AttributeError:
-                    logger.error("Failed to parse page with url %s", url)
+                    logger.error("\nFailed to parse page with url %s", url)
                     failed.append(url)
-        self.data_writer.finalize()
-        return failed
+        pbar.close()
+        return data, failed

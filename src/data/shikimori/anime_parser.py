@@ -2,8 +2,7 @@ import time
 from venv import logger
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from selenium.webdriver.remote.webdriver import WebDriver
-from src.data.utils import DataWriterBase
+import requests
 
 
 class ShikimoriAnimeParser:
@@ -11,19 +10,17 @@ class ShikimoriAnimeParser:
 
     """
 
-    def __init__(self, webdriver: WebDriver, url: str, max_pages: int, data_writer: DataWriterBase) -> None:
+    def __init__(self, url: str, max_pages: int) -> None:
         """ShikimoriAnimeParser constructor
 
         Args:
             webdriver (webdriver): selenium webdriver to execute
             url (str): url of the shikimori website
             max_pages (int): maximum number of pages to parse
-            data_writer (data_writers.DataWriterBase): data-writer to save the parsed data
         """
         self.url = url
-        self.webdriver = webdriver
+        self.headers = {'User-Agent': ''}
         self.max_pages = max_pages
-        self.data_writer = data_writer
 
     def get_ids(self, page_number: int) -> list[str]:
         """gets ids of anime on a page
@@ -34,8 +31,12 @@ class ShikimoriAnimeParser:
         Returns:
             list[str]: list of anime ids
         """
-        self.webdriver.get(f"{self.url}/animes/page/{page_number}")
-        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
+        response = requests.get(
+            f"{self.url}/animes/page/{page_number}",
+            headers=self.headers,
+            timeout=10
+        )
+        soup = BeautifulSoup(response.text, 'html.parser')
         anime_list = soup.find_all("article", {"class": "c-anime"})
 
         return list(map(lambda x: x["id"], anime_list))
@@ -50,10 +51,10 @@ class ShikimoriAnimeParser:
             dict[str, object]: dictionary of properties extracted from page
         """
         uri = f"{self.url}/animes/z{anime_id}"
-        self.webdriver.get(uri)
-        soup = BeautifulSoup(self.webdriver.page_source, 'html.parser')
+        response = requests.get(uri, headers=self.headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        return {"id": anime_id} | self._parse_page(soup)
+        return self._parse_page(soup)
 
     def _parse_page(self, page: BeautifulSoup) -> dict[str, object]:
 
@@ -86,14 +87,14 @@ class ShikimoriAnimeParser:
             "age": age_value
         }
 
-    def parse(self) -> list[int]:
+    def parse(self) -> tuple[dict, list[int]]:
         """Function that starts parcing the website
 
         Returns:
-            list[int]: list of ids failed to parse
+            Tuple[dict, list[int]]: dictionary with data and list of ids failed to parse
         """
         failed = []
-        self.data_writer.prepare()
+        data = {}
         for i in range(1, self.max_pages+1):
 
             logger.info("Parsing %s page", i)
@@ -102,11 +103,10 @@ class ShikimoriAnimeParser:
             for anime_id in tqdm(page_ids):
                 try:
                     anime_data = self.get_anime_data(anime_id)
-                    self.data_writer.write(anime_data)
+                    data[anime_id] = anime_data
                     # sleep to not get captcha
                     time.sleep(2.5)
                 except AttributeError:
                     logger.error("Failed to parse page with id %s", anime_id)
                     failed.append(anime_id)
-        self.data_writer.finalize()
-        return failed
+        return data, failed

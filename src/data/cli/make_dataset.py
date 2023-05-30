@@ -1,59 +1,56 @@
 import logging
 import click
+import json
+from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
-from src.data.utils import JsonWriter
-from src.data.shikimori import ShikimoriAnimeParser, ShikimoriUserDataParser
-from src.data.utils import WebDriverBuilder
+from src.data.shikimori import ShikimoriAnimeParser, ShikimoriUserDataParser, SHIKIMORI_URL
 
 
-def start_parsing(content_type: str, output_filepath='./', page_amount=1, with_browser_ui=True):
+def start_parsing(content_type: str, output_filepath='./', page_amount=1):
     """Method to start parsing data from shikimori.me
     """
-    logger = logging.getLogger(__name__)
 
-    writer = JsonWriter(output_filepath)
-    builder = WebDriverBuilder('chrome', with_browser_ui)
     if content_type == 'anime':
-        parser = ShikimoriAnimeParser(
-            builder(), 'https://shikimori.me', page_amount, writer)
+        parser = ShikimoriAnimeParser(SHIKIMORI_URL, page_amount)
     elif content_type == 'users':
-        parser = ShikimoriUserDataParser(
-            builder(), 'https://shikimori.me', page_amount, writer)
+        parser = ShikimoriUserDataParser(SHIKIMORI_URL, page_amount)
 
-    fails = parser.parse()
+    data, fails = parser.parse()
+    file_path = Path(output_filepath)
+    if file_path.is_dir():
+        file_path /= 'result.json'
+    with open(file_path, 'w+') as file_path:
+        json.dump(data, file_path)
+
     if (len(fails) == 0):
-        logger.info("Successfully parsed all data!")
+        print("Successfully parsed all data!")
     else:
-        logger.warn(
-            "Not all data was parsed succesefully. Failed: \n %s", fails
-        )
+        print("Not all data was parsed succesefully. Failed: \n %s", fails)
 
 
 @click.group()
 def cli():
-    click.echo("Use one of the subcommands to start scraping data")
+    pass
 
 
 @cli.command(help='''Gets anime data.\n
              If filename is not specified, result.json will be created in the directory''')
 @click.option('--page_amount', '-p', type=int)
-@click.option('--with_browser_ui', '-u', default=True)
 @click.argument('out_path', type=click.Path())
-def anime(out_path='./', page_amount=1, with_browser_ui=True):
+def anime(out_path='./', page_amount=1):
     """Method run to get anime dataset
     """
-    start_parsing('anime', out_path, page_amount, with_browser_ui)
+    start_parsing('anime', out_path, page_amount)
 
 
 @cli.command(help='''Gets users data.\n
              If filename is not specified, result.json will be created in the directory''')
-@click.option('--page_amount', '-p', type=int)
-@click.option('--with_browser_ui', '-u', default=True)
+@click.option('--max_users', '-m', type=int)
 @click.argument('out_path', type=click.Path())
-def users(out_path='./', page_amount=1, with_browser_ui=True):
+def users(out_path='./', max_users=10):
     """Method run to get users dataset
     """
-    start_parsing('users', out_path, page_amount, with_browser_ui)
+    start_parsing('users', out_path, max_users)
 
 
 if __name__ == '__main__':
