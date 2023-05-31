@@ -1,3 +1,4 @@
+import json
 import time
 import uuid
 from venv import logger
@@ -43,42 +44,19 @@ class ShikimoriUserDataParser:
 
         return user_links
 
-    def get_user_anime_list(self, user_url: str) -> list[tuple[str, int | None]]:
+    def get_user_anime_list(self, user_url: str) -> list[dict]:
         """Gets anime list of a user
 
         Args:
             user_url (str): url of the page user
 
         Returns:
-            list[tuple[str, int | None]]: list of id, score pairs
+            list[tuple[str, int | None]]: list of user-anime data
         """
-        url = f"{user_url}/list/anime"
+        url = f"{user_url}/list_export/animes.json"
         response = requests.get(url, headers=self.headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        watched = soup.find("div", string='Просмотрено')
-        if watched is None:
-            return []
-        watched_table = watched.parent.find_next_sibling('table')
 
-        user_rates = watched_table.find_all("tr", {"class": "user_rate"})
-        rates_data = list(map(self._parse_row, user_rates))
-        return rates_data
-
-    def _parse_row(self, row: BeautifulSoup) -> tuple[str, int | None]:
-        """Parses a row in the table of user watched list
-
-        Args:
-            row (BeautifulSoup): row to parse
-
-        Returns:
-            dict[str, object]: parsed data
-        """
-        rating = row.find_next("span", {"class": "current-value"}).text
-        rating = int(rating) if rating != "–" else None
-
-        anime_id = f"{row['data-target_id']}"
-
-        return (anime_id, rating)
+        return json.loads(response.text)
 
     def parse(self) -> tuple[dict, list[int]]:
         """Start parsing user data
@@ -94,10 +72,8 @@ class ShikimoriUserDataParser:
 
             for url in user_urls:
                 try:
-                    user_data = {
-                        "ratings": self.get_user_anime_list(url)
-                    }
-                    if user_data["ratings"]:
+                    user_data = self.get_user_anime_list(url)
+                    if user_data:
                         data[str(uuid.uuid4())] = user_data
                         pbar.update(1)
                     if len(data) == self.max_users:
