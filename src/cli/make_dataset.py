@@ -1,7 +1,7 @@
 import logging
-import click
 import json
 from pathlib import Path
+import click
 from dotenv import find_dotenv, load_dotenv
 from src.data.shikimori import ShikimoriAnimeParser, ShikimoriUserDataParser, SHIKIMORI_URL
 
@@ -19,10 +19,10 @@ def start_parsing(content_type: str, output_filepath='./', page_amount=1):
     file_path = Path(output_filepath)
     if file_path.is_dir():
         file_path /= 'result.json'
-    with open(file_path, 'w+') as file_path:
+    with open(file_path, 'w+', encoding='utf-8') as file_path:
         json.dump(data, file_path)
 
-    if (len(fails) == 0):
+    if len(fails) == 0:
         print("Successfully parsed all data!")
     else:
         print("Not all data was parsed succesefully. Failed: \n %s", fails)
@@ -30,7 +30,8 @@ def start_parsing(content_type: str, output_filepath='./', page_amount=1):
 
 @click.group()
 def cli():
-    pass
+    """Run cli
+    """
 
 
 @cli.command(help='''Gets anime data.\n

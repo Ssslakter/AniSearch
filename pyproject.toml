@@ -34,4 +34,5 @@ disable = [
     'missing-module-docstring',
     'too-many-locals',
 ]
-ignore = 'external'
+ignore = 'tests'
+ignore-patterns = 'test_.*\.py'

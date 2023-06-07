@@ -26,7 +26,7 @@ class TestParser:
         result = user_parser.get_user_anime_list(
             f'{SHIKIMORI_URL}/slakter')
         assert type(result) is list
-        assert type(result[0]) is tuple
+        assert type(result[0]) is dict
 
     def test_empty_user_page_not_crash(self, user_parser: ShikimoriUserDataParser):
         result = user_parser.get_user_anime_list(
