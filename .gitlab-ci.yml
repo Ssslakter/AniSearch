@@ -1,0 +1,74 @@
+image: python:3.10
+
+variables:
+  CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+  POETRY_HOME: "$CACHE_DIR/poetry"
+
+before-script:
+  script:
+    - export PATH="$POETRY_HOME/bin/:$PATH"
+    - echo $PATH
+
+stages:
+  - install-deps
+  - build
+  - test
+
+workflow:
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    when: always
+
+
+cache:
+    key: poetry-cache
+    paths:
+      - $CACHE_DIR
+      - .venv
+
+install:
+  stage: install-deps
+  script:
+    - echo $PATH
+    - pwd
+    - ls -la
+    - if ! command -v poetry &> /dev/null ; then curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2 ; fi
+    - export PATH="$POETRY_HOME/bin:$PATH"
+    - poetry --version
+    - poetry config virtualenvs.in-project true
+    - poetry config cache-dir $CACHE_DIR
+    - poetry config --list
+    - poetry install
+    - source $(poetry env info --path)/bin/activate
+    - pip list
+    - poetry show --outdated
+
+
+build:
+  stage: build
+  script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
+    - poetry --version
+    - poetry build
+
+lint:
+  stage: build
+  needs: 
+    - build
+  script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
+    - source $(poetry env info --path)/bin/activate
+    - pylint src
+
+test:
+  stage: test
+  needs:
+    - lint
+  script:
+    - export PATH="$POETRY_HOME/bin:$PATH"
+    - source $(poetry env info --path)/bin/activate
+    - pytest src
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      when: on_success
+    - when: manual
