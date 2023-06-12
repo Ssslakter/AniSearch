@@ -11,11 +11,10 @@ MAX_PAGES = 100
 
 
 class ShikimoriUserDataParser:
-    """Parses user ratings data from shikimori
-    """
+    """Parses user ratings data from shikimori"""
 
     def __init__(self, url: str, max_users: int) -> None:
-        self.headers = {'User-Agent': ''}
+        self.headers = {"User-Agent": ""}
         self.url = url
         self.max_users = max_users
         self.max_pages = MAX_PAGES
@@ -30,17 +29,14 @@ class ShikimoriUserDataParser:
             list[str]: list of userpage urls
         """
         response = requests.get(
-            f"{self.url}/users/page/{page_number}",
-            headers=self.headers,
-            timeout=10
+            f"{self.url}/users/page/{page_number}", headers=self.headers, timeout=10
         )
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         user_links = []
         user_divs = soup.find_all("div", {"class": "b-user"})
 
-        user_links = list(map(lambda x: x.find(
-            'a', class_="name")["href"], user_divs))
+        user_links = list(map(lambda x: x.find("a", class_="name")["href"], user_divs))
 
         return user_links
 
@@ -51,7 +47,7 @@ class ShikimoriUserDataParser:
             user_url (str): url of the page user
 
         Returns:
-            list[tuple[str, int | None]]: list of user-anime data
+            list[dict]: list of user-anime data
         """
         url = f"{user_url}/list_export/animes.json"
         response = requests.get(url, headers=self.headers, timeout=10)

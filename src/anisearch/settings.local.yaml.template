@@ -1,0 +1,6 @@
+---
+qdrant:
+  api-key: ''
+  url: 'http://localhost:6333'
+  collection-name: 'test-collection'
+models-dir: 'models'
