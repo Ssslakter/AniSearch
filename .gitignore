@@ -1,8 +1,12 @@
-#notebooks
+#project specific
 /notebooks/
+/models/
 .pytest_cache/
 .venv/
 /data/
+wandb
+settings.local.yaml
+tmp/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

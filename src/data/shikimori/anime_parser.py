@@ -6,9 +6,7 @@ import requests
 
 
 class ShikimoriAnimeParser:
-    """Class for parsing shikimori anime data
-
-    """
+    """Class for parsing shikimori anime data"""
 
     def __init__(self, url: str, max_pages: int) -> None:
         """ShikimoriAnimeParser constructor
@@ -19,7 +17,7 @@ class ShikimoriAnimeParser:
             max_pages (int): maximum number of pages to parse
         """
         self.url = url
-        self.headers = {'User-Agent': ''}
+        self.headers = {"User-Agent": ""}
         self.max_pages = max_pages
 
     def get_ids(self, page_number: int) -> list[str]:
@@ -32,11 +30,9 @@ class ShikimoriAnimeParser:
             list[str]: list of anime ids
         """
         response = requests.get(
-            f"{self.url}/animes/page/{page_number}",
-            headers=self.headers,
-            timeout=10
+            f"{self.url}/animes/page/{page_number}", headers=self.headers, timeout=10
         )
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
         anime_list = soup.find_all("article", {"class": "c-anime"})
 
         return list(map(lambda x: x["id"], anime_list))
@@ -52,30 +48,29 @@ class ShikimoriAnimeParser:
         """
         uri = f"{self.url}/animes/z{anime_id}"
         response = requests.get(uri, headers=self.headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         return self._parse_page(soup)
 
     def _parse_page(self, page: BeautifulSoup) -> dict[str, object]:
-
         genres = page.find_all("span", {"class": "genre-ru"})
         header = page.find("header", {"class": "head"})
         label = header.find("h1").text if header else None
         ru_name, en_name = label.split(" / ") if label else (None, None)
         genres = list(map(lambda x: x.text, genres))
 
-        episodes_div = page.find('div', class_='key', text='Эпизоды:').parent
-        number = episodes_div.find('div', class_='value').text
+        episodes_div = page.find("div", class_="key", text="Эпизоды:").parent
+        number = episodes_div.find("div", class_="value").text
 
-        type_div = page.find('div', class_='key', text='Тип:').parent
-        type_value = type_div.find('div', class_='value').text
+        type_div = page.find("div", class_="key", text="Тип:").parent
+        type_value = type_div.find("div", class_="value").text
 
-        scores_div = page.find('div', class_='scores')
-        score_value_div = scores_div.find('div', class_='score-value')
+        scores_div = page.find("div", class_="scores")
+        score_value_div = scores_div.find("div", class_="score-value")
         score_value = float(score_value_div.text.strip())
 
-        age_div = page.find('div', class_='key', text='Рейтинг:').parent
-        age_value = age_div.find('div', class_='value').text
+        age_div = page.find("div", class_="key", text="Рейтинг:").parent
+        age_value = age_div.find("div", class_="value").text
 
         return {
             "ru_name": ru_name,
@@ -84,7 +79,7 @@ class ShikimoriAnimeParser:
             "episode_number": number,
             "content_type": type_value,
             "average_score": score_value,
-            "age": age_value
+            "age": age_value,
         }
 
     def parse(self) -> tuple[dict, list[int]]:
@@ -95,8 +90,7 @@ class ShikimoriAnimeParser:
         """
         failed = []
         data = {}
-        for i in range(1, self.max_pages+1):
-
+        for i in range(1, self.max_pages + 1):
             logger.info("Parsing %s page", i)
             page_ids = self.get_ids(i)
 

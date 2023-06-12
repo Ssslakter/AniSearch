@@ -5,6 +5,6 @@
 * install poetry
 * run `poetry install` to get all the dependencies
 * run `poetry shell` or `poetry run` to run some scripts
-* probably you want to look at the `cli` folder
+* probably you might need to start from the `cli` folder
 ### Links to infra
-* Qdrant https://ca6f83e6-12fc-407c-b629-35c5f9e200b6.eu-central-1-0.aws.cloud.qdrant.io
+* https://www.notion.so/7a3b43d67b1347e68e48aa68854545cb?v=327606754723469aa60300f7492f24ef
