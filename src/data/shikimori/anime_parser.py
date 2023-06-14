@@ -37,16 +37,16 @@ class ShikimoriAnimeParser:
 
         return list(map(lambda x: x["id"], anime_list))
 
-    def get_anime_data(self, anime_id: str) -> dict[str, object]:
+    def get_anime_data(self, uid: str) -> dict[str, object]:
         """Gets anime data from its main page
 
         Args:
-            anime_id (str): id of the anime on the shikimori to join its page
+            uid (str): id of the anime on the shikimori to join its page
 
         Returns:
             dict[str, object]: dictionary of properties extracted from page
         """
-        uri = f"{self.url}/animes/z{anime_id}"
+        uri = f"{self.url}/animes/z{uid}"
         response = requests.get(uri, headers=self.headers, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
 
@@ -94,13 +94,13 @@ class ShikimoriAnimeParser:
             logger.info("Parsing %s page", i)
             page_ids = self.get_ids(i)
 
-            for anime_id in tqdm(page_ids):
+            for uid in tqdm(page_ids):
                 try:
-                    anime_data = self.get_anime_data(anime_id)
-                    data[anime_id] = anime_data
+                    anime_data = self.get_anime_data(uid)
+                    data[uid] = anime_data
                     # sleep to not get captcha
                     time.sleep(2.5)
                 except AttributeError:
-                    logger.error("Failed to parse page with id %s", anime_id)
-                    failed.append(anime_id)
+                    logger.error("Failed to parse page with id %s", uid)
+                    failed.append(uid)
         return data, failed

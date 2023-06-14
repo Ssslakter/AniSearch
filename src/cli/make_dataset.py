@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import click
 from dotenv import find_dotenv, load_dotenv
+from src.data.artifacts import merge_data
 from src.data.shikimori import (
     ShikimoriAnimeParser,
     ShikimoriUserDataParser,
@@ -44,7 +45,7 @@ def cli():
 )
 @click.option("--page_amount", "-p", type=int)
 @click.argument("out_path", type=click.Path())
-def anime(out_path="./", page_amount=1):
+def parse_anime(out_path="./", page_amount=1):
     """Method run to get anime dataset"""
     start_parsing("anime", out_path, page_amount)
 
@@ -55,9 +56,19 @@ def anime(out_path="./", page_amount=1):
 )
 @click.option("--max_users", "-m", type=int)
 @click.argument("out_path", type=click.Path())
-def users(out_path="./", max_users=10):
+def parse_users(out_path="./", max_users=10):
     """Method run to get users dataset"""
     start_parsing("users", out_path, max_users)
+
+
+@cli.command(help="""Merges csv and jl data and save to out-path""")
+@click.argument("csv_path", type=click.Path())
+@click.argument("jl_path", type=click.Path())
+@click.argument("out_path", type=click.Path())
+def merge_datasets(csv_path="./data", jl_path="./data", out_path="./"):
+    """Merges csv and jl data"""
+    merged = merge_data(csv_path, jl_path)
+    merged.to_csv(out_path, index=False)
 
 
 if __name__ == "__main__":

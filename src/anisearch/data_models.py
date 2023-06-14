@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class AnimeData(BaseModel):
     """Dataclass for anime data"""
 
-    anime_id: int
+    uid: int
     title: str
     genres: list[str] | None
     aired: str | None
