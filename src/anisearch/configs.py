@@ -12,7 +12,7 @@ class QdrantConfig:
 
     collection_name: str
     url: str | None
-    api_key: str | None
+    api_key: str | None = None
     distance_func: str = "Cosine"
 
 

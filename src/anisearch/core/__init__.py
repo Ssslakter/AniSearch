@@ -1,2 +1,2 @@
-from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from src.anisearch.core.storage import Storage
+from src.anisearch.core.services import Services, get_embeddings

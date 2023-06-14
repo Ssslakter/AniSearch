@@ -18,6 +18,8 @@ langchain = { extras = ["qdrant"], version = "0.0.186" }
 langchain-serve = "^0.0.43"
 dataclass-wizard = "^0.22.2"
 fastapi = "^0.96.1"
+bs4 = "^0.0.1"
+pandas = "^2.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -45,6 +47,7 @@ disable = [
     'too-many-locals',
     'invalid-name',
     'too-many-instance-attributes',
+    'no-member',
 ]
 extension-pkg-whitelist = 'pydantic'
 fail-under = 9.5
