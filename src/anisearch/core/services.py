@@ -1,3 +1,5 @@
+from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
+from langchain.docstore.document import Document
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from src.features.document_builder import DocumentBuilder
 from src.anisearch.configs import Config
@@ -18,10 +20,40 @@ class Services:
         """Perform some init configurations like creating collections, etc."""
         self.storage.init_collection(self.config.qdrant.collection_name)
 
-    def insert_anime(self, anime: AnimeData):
+    def insert_anime(self, anime: AnimeData) -> list[str]:
         """Inserts anime into storage"""
         doc = self.document_builder.render_document(anime)
         return self.storage.qdrant.add_documents([doc])
+
+    async def search_anime(self, query: str) -> list[Document]:
+        return await self.storage.qdrant.asearch(query, search_type="similarity", k=15)
+
+    def delete_anime(self, uid: int):
+        self.storage.qdrant.client.delete(
+            self.config.qdrant.collection_name,
+            points_selector=Filter(
+                should=[
+                    FieldCondition(
+                        key="metadata.uid",
+                        match=MatchValue(value=uid)
+                    )
+                ]
+            )
+        )
+
+    def get_anime(self, uid: int):
+        return self.storage.qdrant.client.search(
+            self.config.qdrant.collection_name,
+            self.embeddings.embed_documents([""])[0],
+            query_filter=Filter(
+                should=[
+                    FieldCondition(
+                        key="metadata.uid",
+                        match=MatchValue(value=uid)
+                    )
+                ]
+            ),
+        )
 
     def get_collections(self):
         return self.storage.client.get_collections()
