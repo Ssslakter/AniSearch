@@ -1,8 +1,8 @@
-import click
 import logging
+import click
 import pandas as pd
-from src.data.artifacts import upload_artifacts
 from dotenv import find_dotenv, load_dotenv
+from src.data.artifacts import upload_artifacts
 from src.anisearch.core import Storage, get_embeddings
 from src.anisearch.configs import load_configs
 

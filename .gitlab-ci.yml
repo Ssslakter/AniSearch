@@ -48,8 +48,11 @@ install:
     - pip list
     - poetry show --outdated
   cache:
+    key: poetry-cache
+    paths:
+      - $CACHE_DIR
+      - .venv
     policy: pull-push
-
 
 build:
   stage: build
