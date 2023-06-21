@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from jinja2 import Template
 import pandas as pd
+import numpy as np
 from langchain.docstore.document import Document
 from src.anisearch.data_models import AnimeData
 
@@ -14,9 +15,6 @@ TEMPLATE_VARS = [
     "title",
     "genres",
     "aired",
-    "episodes",
-    "popularity",
-    "score",
     "synopsis",
 ]
 
@@ -55,6 +53,12 @@ class DocumentBuilder:
             page_content=rendered,
             metadata={
                 "uid": data_dict["uid"],
+                "title": data_dict["title"],
+                "genres": data_dict["genres"],
+                "aired": data_dict["aired"],
+                "episodes": data_dict["episodes"],
+                "popularity": data_dict["popularity"],
+                "score": data_dict["score"],
                 "img_url": data_dict["img_url"],
             },
         )
@@ -68,14 +72,17 @@ class DocumentBuilder:
         Returns:
             list[Document]: list of rendered documents
         """
+        df = self.prepare_df(df)
         rendered: pd.Series = df.apply(self.render_document, axis=1)  # type:ignore
         return rendered.to_list()
 
     def prepare_df(self, df: pd.DataFrame) -> pd.DataFrame:
         """prepare df (fix all artifacts)"""
         df = self.fix_lists(df)  # type:ignore
-        df["synopsis"] = self.remove_text(df["synopsis"], REMOVE_FROM_DATA)
         df = df.where(pd.notnull(df), None)
+        df["ranked"] = df["ranked"].replace(np.nan, None)
+        df["score"] = df["score"].replace(np.nan, None)
+        df["synopsis"] = self.remove_text(df["synopsis"], REMOVE_FROM_DATA)
         return df
 
     def fix_lists(
@@ -98,7 +105,7 @@ class DocumentBuilder:
             cols = [
                 key
                 for key, value in df.iloc[0].to_dict().items()
-                if re.fullmatch(regex, str(value)) is not None
+                if isinstance(value, str) and re.fullmatch(regex, value) is not None
             ]
 
         for col in cols:

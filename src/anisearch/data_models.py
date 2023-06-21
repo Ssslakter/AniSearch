@@ -13,3 +13,9 @@ class AnimeData(BaseModel):
     score: float | None
     synopsis: str | None
     img_url: str | None
+
+
+class Query(BaseModel):
+    """Dataclass for query"""
+
+    text: str

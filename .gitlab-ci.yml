@@ -36,6 +36,7 @@ install:
     - echo $PATH
     - pwd
     - ls -la
+    - export PATH="$POETRY_HOME/bin:$PATH"
     - if [! command -v poetry &> /dev/null]; then curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1 ; fi
     - if [ "$(poetry --version  | sed -nE 's/.*([0-9]+\.[0-9]+)\.[0-9]+.*/\1/p')" != "1.5" ]; then curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1 ; fi
     - export PATH="$POETRY_HOME/bin:$PATH"
