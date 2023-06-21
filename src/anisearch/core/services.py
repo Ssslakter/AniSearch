@@ -10,6 +10,21 @@ from src.anisearch.data_models import AnimeData
 class Services:
     """Class that holds all services"""
 
+    filters = (
+        Filter(
+            must=[
+                FieldCondition(
+                    key="metadata.score",
+                    range=Range(gt=4.5),
+                ),
+                FieldCondition(
+                    key="metadata.popularity",
+                    range=Range(lt=8000),
+                ),
+            ]
+        ),
+    )
+
     def __init__(self, config: Config) -> None:
         self.embeddings = get_embeddings(config.models_dir)
         self.config = config
@@ -26,19 +41,30 @@ class Services:
         return self.storage.qdrant.add_documents([doc])
 
     async def search_anime(self, query: str) -> list[Document]:
-        return await self.storage.qdrant.asearch(query, search_type="similarity", k=15)
+        docs = await self.storage.qdrant.asearch(
+            query, search_type="similarity", k=150, query_filter=Services.filters
+        )
+        return self.postprocess(docs)
+
+    @staticmethod
+    def _get_synopsis(doc: Document) -> Document:
+        line = "Synopsis: "
+        idx = doc.page_content.find(line)
+        doc.page_content = doc.page_content[idx + len(line) :]
+        return doc
+
+    @staticmethod
+    def postprocess(docs: list[Document]) -> list[Document]:
+        docs = sorted(docs, key=lambda x: x.metadata["popularity"])[:15]
+        # docs = sorted(docs, key=lambda x: x.metadata["score"], reverse=True)
+        return list(map(Services._get_synopsis, docs))
 
     def delete_anime(self, uid: int):
         self.storage.qdrant.client.delete(
             self.config.qdrant.collection_name,
             points_selector=Filter(
-                should=[
-                    FieldCondition(
-                        key="metadata.uid",
-                        match=MatchValue(value=uid)
-                    )
-                ]
-            )
+                should=[FieldCondition(key="metadata.uid", match=MatchValue(value=uid))]
+            ),
         )
 
     def get_anime(self, uid: int):
@@ -46,12 +72,7 @@ class Services:
             self.config.qdrant.collection_name,
             self.embeddings.embed_documents([""])[0],
             query_filter=Filter(
-                should=[
-                    FieldCondition(
-                        key="metadata.uid",
-                        match=MatchValue(value=uid)
-                    )
-                ]
+                should=[FieldCondition(key="metadata.uid", match=MatchValue(value=uid))]
             ),
         )
 
