@@ -45,10 +45,15 @@ class DocumentBuilder:
         else:
             data_dict = data.to_dict()
         keys = data_dict.keys()
+        to_render = {}
         for key in TEMPLATE_VARS:
             if key not in keys:
                 raise ValueError(f"Missing key in the row: '{key}'")
-        rendered = self.template.render(**data_dict)
+            if isinstance(data_dict[key], list):
+                to_render[key] = list(map(lambda x: str(x).lower(), data_dict[key]))
+            else:
+                to_render[key] = str(data_dict[key]).lower()
+        rendered = self.template.render(**to_render)
         return Document(
             page_content=rendered,
             metadata={
@@ -60,6 +65,7 @@ class DocumentBuilder:
                 "popularity": data_dict["popularity"],
                 "score": data_dict["score"],
                 "img_url": data_dict["img_url"],
+                "synopsis": data_dict["synopsis"],
             },
         )
 

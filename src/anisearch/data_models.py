@@ -19,3 +19,10 @@ class Query(BaseModel):
     """Dataclass for query"""
 
     text: str
+
+
+class UserQuery(BaseModel):
+    """Dataclass for query"""
+
+    text: str
+    nickname: str

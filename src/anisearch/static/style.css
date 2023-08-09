@@ -3,18 +3,19 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
 .search-input {
     border-radius: 20px;
     padding: 15px;
-    width: 80%;
+    width: 100%;
     /* Adjust the width as needed */
     transition: height 0.3s ease-in-out;
     align-self: flex-start;
     resize: vertical;
+    overflow: hidden;
 }
 
 .search-input:focus {

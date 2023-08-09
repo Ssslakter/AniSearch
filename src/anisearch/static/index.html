@@ -10,9 +10,28 @@
 </head>
 
 <body>
-  <h4>Write something about things you liked or recently watch, this helps us find what you might like =D</h4>
+  <h5 class="text-muted text-center mt-3">
+    Write something about things you liked or recently watch, this helps us find what
+    you might like
+  </h5>
+
+  <div class="d-flex justify-content-center">
+    <div class="form-group d-flex justify-content-between">
+      <div class="col-6">
+        <label for="toggle-nickname" class="mr-3 text-muted">Enable User</label>
+        <input type="checkbox" id="toggle-nickname" class="mr-3">
+        <br>
+        <label for="toggle-fulltext" class="mr-3 text-muted">Enable fulltext search</label>
+        <input type="checkbox" id="toggle-fulltext" class="mr-3">
+      </div>
+      <input type="text" class="form-control" id="nickname" placeholder="Enter your nickname..." disabled>
+      <form style="margin-left: 50px" action="/users" ><input type="submit" value="Users" class="btn rounded-circle"/></form>
+    </div>
+  </div>
+
   <div class="container-fluid d-flex justify-content-center align-items-start py-4">
-    <div class="col-6">
+
+    <div class="col-7">
       <div class="search-bar d-flex align-items-start">
         <textarea class="form-control search-input mr-4" rows="1"
           placeholder="I really liked doctor stone for its humor, so I like to watch something like that"

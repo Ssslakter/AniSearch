@@ -1,15 +1,18 @@
 $(document).ready(function () {
     $('.search-btn').click(sendRequest);
 
-    $(document).ready(function () {
-        $('.search-input').keydown(function (event) {
-            if (event.keyCode === 13 && !event.shiftKey) {
-                event.preventDefault(); // Prevent the default Enter key behavior
+    $('.search-input').keydown(function (event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+            event.preventDefault(); // Prevent the default Enter key behavior
 
-                // Call the function to send the request
-                sendRequest();
-            }
-        });
+            // Call the function to send the request
+            sendRequest();
+        }
+    });
+
+    $('#toggle-nickname').change(function () {
+        var isNicknameEnabled = $(this).is(':checked');
+        $('#nickname').prop('disabled', !isNicknameEnabled);
     });
 
     function renderSearchResults(data) {
@@ -26,7 +29,7 @@ $(document).ready(function () {
                 var img = $('<img>').addClass('card-img-top img-fluid').attr('src', item.metadata.img_url);
                 var cardBody = $('<div>').addClass('card-body');
                 var title = $('<h5>').addClass('card-title').text(item.metadata.title);
-                var description = $('<p>').addClass('card-text').text(item.page_content);
+                var description = $('<p>').addClass('card-text').text(item.metadata.synopsis);
 
                 var infoList = $('<ul>').addClass('list-group list-group-flush');
                 var aired = $('<li>').addClass('list-group-item').text('Aired: ' + item.metadata.aired);
@@ -48,20 +51,55 @@ $(document).ready(function () {
 
     function sendRequest() {
         var searchText = $('.search-input').val();
-        if (searchText.trim() !== '') {
-            $.ajax({
-                type: 'POST',
-                url: '/api/v1/content',
-                data: JSON.stringify({ text: searchText }),
-                contentType: 'application/json',
-                success: function (response) {
-                    renderSearchResults(response);
-                },
-                error: function (error) {
-                    console.error(error);
-                }
-            });
+        var nickname = $('#nickname').val();
+
+        if ($('#toggle-nickname').prop('checked')) {
+            if (searchText.trim() !== '' && nickname.trim() !== '') {
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/v1/content/recommend',
+                    data: JSON.stringify({ text: searchText, nickname: nickname }),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        renderSearchResults(response);
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+            }
+            else if (nickname.trim() !== '') {
+                $.ajax({
+                    type: 'GET',
+                    url: `/api/v1/content/recommend/${nickname}`,
+                    contentType: 'application/json',
+                    success: function (response) {
+                        renderSearchResults(response);
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+            }
+        } else {
+            if (searchText.trim() !== '') {
+                let url = ""; if ($('#toggle-fulltext').prop('checked')) url = "text_search";
+
+                $.ajax({
+                    type: 'POST',
+                    url: `/api/v1/content/${url}`,
+                    data: JSON.stringify({ text: searchText }),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        renderSearchResults(response);
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });
+            }
         }
     }
+
 });
 
