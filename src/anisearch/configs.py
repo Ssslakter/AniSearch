@@ -29,6 +29,7 @@ class Config(YAMLWizard):
 
     qdrant: QdrantConfig
     models_dir: str
+    recsys_dir: str
 
     def transfer_secrets(self, secrets: Secrets):
         """Takes secrets and puts them into configs"""

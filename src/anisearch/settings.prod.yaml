@@ -1,5 +1,6 @@
 ---
 qdrant:
-  collection-name: ani-storage
+  collection-name: ani-store
   url: https://ca6f83e6-12fc-407c-b629-35c5f9e200b6.eu-central-1-0.aws.cloud.qdrant.io:6333
-models-dir: D:\Coding\Python\anime-rec-sys\models
+models-dir: models
+recsys-dir: models/recsys

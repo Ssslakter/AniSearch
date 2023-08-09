@@ -16,6 +16,11 @@ async def get_index():
     return FileResponse(str(curr_dir / "static" / "index.html"))
 
 
+@app.get("/users", response_class=FileResponse)
+async def get_index():
+    return FileResponse(str(curr_dir / "static" / "users.html"))
+
+
 @app.on_event("startup")
 async def startup_event():
     start_up()
